@@ -1,0 +1,93 @@
+import sqlite3
+
+class BancoDeDados:
+
+  def __init__(self, nome='banco.db'):
+    self.nome, self.conexao = nome, None
+
+  def conecta(self):
+    self.conexao = sqlite3.connect(self.nome)
+
+  def desconecta(self):
+    try:
+      self.conexao.close()
+    except AttributeError:
+      pass
+
+  def criar_tabelas(self):
+    try:
+      cursor = self.conexao.cursor()
+
+      cursor.execute('''
+      CREATE TABLE IF NOT EXISTS clientes (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        cpf VARCHAR(11) UNIQUE NOT NULL,
+        email TEXT NOT NULL
+      )''')
+
+    except AttributeError:
+      print('Faça as conexões do banco antes de criar as tabelas')
+
+  def inserir_cliente(self, nome, cpf, email):
+    try:
+      cursor = self.conexao.cursor()
+      try:
+        cursor.execute('''
+        INSERT INTO clientes (nome, cpf, email) VALUES (?,?,?)
+        ''', (nome, cpf, email))
+      except sqlite3.IntegrityError:
+        print('o CPF %s já existe!' % cpf)
+      self.conexao.commit()
+    except AttributeError:
+      print('Faça as conexões do banco antes de inserir os clientes')
+
+  def buscar_cliente(self, cpf):
+    try:
+      cursor = self.conexao.cursor()
+      cursor.execute('''SELECT nome 
+                        FROM Clientes
+                        WHERE cpf = ?;''', (cpf,))
+
+      for linha in cursor.fetchall():
+        print('Cliente %s encontrado.' % linha)
+
+    except AttributeError:
+      print('Faça as conexões do banco antes de buscar os clientes')
+
+  def ler_dados(self):
+    cpf = '11111111111'
+    try:
+      cursor = self.conexao.cursor()
+      cursor.execute('''SELECT * FROM Clientes''')
+
+      for linha in cursor.fetchall():
+        print(linha)
+
+    except AttributeError:
+      print('Faça as conexões do banco antes de criar as tabelas')
+  
+  def remover_cliente(self, cpf):
+    try:
+
+      cursor = self.conexao.cursor()
+      cursor.execute('''DELETE FROM Clientes
+                        WHERE cpf = ?;''', (cpf,))
+      
+      self.conexao.commit()
+    except AttributeError:
+      print('Faça as conexões do banco antes de buscar os clientes')
+
+  def buscar_email(self, email):
+    try:
+      cursor = self.conexao.cursor()
+      cursor.execute('''SELECT email FROM Clientes
+                        WHERE email = (?);''', (email,))
+          
+      if cursor.fetchone() != None:
+        print('o e-mail %s consta na base de dados' % email)
+      else:
+        print('o e-mail %s NÃO consta na base de dados' % email)
+      
+    except AttributeError:
+      print('Faça as conexões do banco antes de buscar os clientes')
